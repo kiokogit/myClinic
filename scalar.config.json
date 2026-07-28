@@ -15,20 +15,11 @@
         "type": "openapi",
         "title": "API Reference",
         "filepath": "docs/openapi.yaml"
-      },
-      "/github": {
-        "title": "GitHub SDKs",
-        "external": "https://github.com/myclinic"
-      },
-      "/support": {
-        "title": "Developer Support",
-        "external": "https://support.your-domain.com"
       }
     }
   },
   "siteConfig": {
     "theme": "kepler",
-    "layout": "modern",
     "darkMode": true,
     "hideDownloadButton": false,
     "defaultOpenFirstTag": false,
