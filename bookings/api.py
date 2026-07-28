@@ -15,10 +15,13 @@ class AppointmentsView(ModelViewSet):
 
 
     def get_queryset(self):
+        qs = self.queryset
         # all if admin
-        # by doc if doc
-        # by public if public
-        return self.queryset.filter()
+        if self.request.user.user_type == 'public':
+            qs = qs.filter(patient=self.request.user)
+        elif self.request.user.user_type == 'doctor':
+            qs = qs.filter(doctor=self.request.user)
+        return qs
 
     
                 

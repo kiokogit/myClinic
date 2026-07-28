@@ -10,34 +10,47 @@ import datetime
 from django.db import models
 
 
+class GenericQuerySet(models.QuerySet):
+	def delete(self):
+		actor = GenericBaseModel.get_current_actor()
+		return self.update(
+			is_deleted=True,
+			deleted_by=actor,
+			is_active=False,
+			date_deleted=datetime.datetime.now()
+		)
+
 class GenericModelManager(models.Manager):
 	def create(self, **kwargs):
-		if 'created_by' not in kwargs:
-			actor = GenericBaseModel.get_current_actor()
-			if actor:
-				kwargs['created_by'] = actor
-		kwargs['deleted_by'] = None
-		created_instance = super().create(**kwargs)
-		return created_instance
+		kwargs.setdefault(
+			"created_by",
+			GenericBaseModel.get_current_actor()
+		)
+		kwargs["deleted_by"] = None
+		kwargs["is_deleted"] = False
+		return super().create(**kwargs)
 	
 	def get_queryset(self):
-		# Filter out deleted records
-		return super().get_queryset().filter(is_deleted=False)
+		return GenericQuerySet(self.model, using=self._db).filter(
+			is_deleted=False
+		)
 
 
 class AllObjectsManager(models.Manager):
 	"""Manager that returns all records, including deleted ones."""
-	
 	def get_queryset(self):
-		return super().get_queryset()
+			return GenericQuerySet(
+				self.model,
+				using=self._db
+			)
 
 class GenericPrimaryKeyField(models.UUIDField):
-    def __init__(self, **kwargs):
-        kwargs.setdefault('primary_key', True)
-        kwargs.setdefault('editable', False)
-        kwargs.setdefault('default', uuid.uuid4)
-        kwargs.setdefault('unique', True)
-        super().__init__(**kwargs)
+	def __init__(self, **kwargs):
+		kwargs.setdefault('primary_key', True)
+		kwargs.setdefault('editable', False)
+		kwargs.setdefault('default', uuid.uuid4)
+		kwargs.setdefault('unique', True)
+		super().__init__(**kwargs)
 
 class GenericBaseModel(models.Model):
 	id = GenericPrimaryKeyField()
@@ -55,16 +68,17 @@ class GenericBaseModel(models.Model):
 	objects_all = AllObjectsManager()
 	
 	def delete(self, using=None, keep_parents=False):
-		# no deletion allowed
-		raise SuspiciousActivityDetectedError("Action flagged as fraudulent. Deletion not allowed.")
-	
+		self.is_deleted = True
+		self.is_active = False
+		self.date_deleted = datetime.datetime.now()
+		self.deleted_by = self.get_current_actor()
+		self.save(update_fields=["is_deleted", "deleted_by", "is_active", "date_deleted"])
 
 	@staticmethod
 	def get_current_actor():
 		request = get_current_request()
 		if request:
-			user = decode_jwt(request.headers.get('JWTAUTH').split(' ')[1])
-			return user
+			return request.user
 		return None
 
 

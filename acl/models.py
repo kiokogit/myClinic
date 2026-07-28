@@ -1,7 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-from utils.base_models import GenericBaseModel
+from utils.base_models import GenericBaseModel, GenericModelManager, AllObjectsManager
+from django.contrib.auth.models import UserManager
+
+class CustomUserManager(UserManager, GenericModelManager):
+    ...
+
 
 
 class CustomUser(AbstractUser, GenericBaseModel):
@@ -28,6 +33,8 @@ class CustomUser(AbstractUser, GenericBaseModel):
     residence = models.TextField(blank=True, null=True)
 
     # for doctors, check if fulltime or locum; all fulltime now
+    objects = CustomUserManager() # type: ignore
+    objects_all = AllObjectsManager()
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['first_name', 'last_name']

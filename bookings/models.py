@@ -7,8 +7,8 @@ from utils.base_models import GenericBaseModel
 
 
 class AppointmentsModel(GenericBaseModel):
-    public_user = models.ForeignKey('acl.CustomUser', related_name='bookings', on_delete=models.CASCADE)
-    target_user = models.ForeignKey('acl.CustomUser', related_name='appointments', on_delete=models.CASCADE)
+    patient = models.ForeignKey('acl.CustomUser', related_name='bookings', on_delete=models.CASCADE)
+    doctor = models.ForeignKey('acl.CustomUser', related_name='appointments', on_delete=models.CASCADE)
 
     start_time = models.DateTimeField(null=False)
     # assume duration is 30mins

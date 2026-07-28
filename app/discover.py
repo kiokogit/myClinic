@@ -12,7 +12,7 @@ from app.settings import LOCAL_APPS
 BASE_DIR = Path(__file__).resolve().parent
 
 # Configuration
-API_VERSION_PREFIX = 'api/v1/'
+API_VERSION_PREFIX = 'api/'
 
 
 logger = logging.getLogger(__name__)

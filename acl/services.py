@@ -33,5 +33,15 @@ class GeneralUserService:
         }
 
 
+    def logout(self,data):
+
+        return True
+
+    # others
+    def reset_password(self):
+        ...
+
+
+
 
 

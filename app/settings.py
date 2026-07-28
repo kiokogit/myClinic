@@ -181,7 +181,9 @@ CORS_ALLOW_HEADERS = [
 
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'utils.exceptions.custom_exception_handler',
-    # 'DEFAULT_AUTHENTICATION_CLASSES': ['utils.permissions.JWTAuthentication'],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        "utils.auth_classes.JWTAuthentication"
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
         'utils.permissions.AuthenticatedUserPermission',
     ],
@@ -196,29 +198,59 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "MyClinic API",
-    "DESCRIPTION": "this is a ",
     "VERSION": "1.0.0",
-}
+    "DESCRIPTION": README,
 
-SPECTACULAR_SETTINGS = {
-    "TITLE": "MyClinic API",
-    "VERSION": "1.0.0",
 
-    "SECURITY": [
+    # "APPEND_COMPONENTS": {
+    #     "securitySchemes": {
+    #         "BearerAuth": {
+    #             "type": "http",
+    #             "scheme": "bearer",
+    #             "bearerFormat": "JWT",
+    #             "description": "Enter your JWT token in the format: **Bearer &lt;token&gt;**",
+    #         }
+    #     }
+    # },
+
+    # "SECURITY": [
+    #     {"BearerAuth": []},
+    # ],
+    # "SERVE_INCLUDE_SCHEMA": False,
+
+    "TAGS": [
         {
-            "BearerAuth": []
-        }
+            "name": "User Management",
+            "description": (BASE_DIR / "acl/README.md").read_text(encoding="utf-8"),
+        },
+        {
+            "name": "Appointments",
+            "description": (BASE_DIR / "bookings/README.md").read_text(encoding="utf-8"),
+        },
+        {
+            "name": "Resource Management",
+            "description": (BASE_DIR / "hrm/README.md").read_text(encoding="utf-8"),
+        },
     ],
-
-    "COMPONENTS": {
-        "securitySchemes": {
-            "BearerAuth": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT",
-            }
-        }
-    }
+    "EXTENSIONS_ROOT": {
+        "x-tagGroups": [
+            {
+                "name": "DOCUMENTATION",
+                "tags": ["User Management", "Appointments", "Resource Management"]
+            },
+            {
+                "name": "API ENDPOINTS",     
+                "tags": [
+                    "acl",
+                    "bookings",
+                    "hrm",
+                    "schema",
+                    "system",
+                ],
+            },
+            
+        ]
+    },
 }
 
 APPEND_SLASH = False
@@ -238,5 +270,3 @@ CACHES = {
         }
     }
 }
-
-DOCS_ROOT = os.path.join(BASE_DIR, 'site')

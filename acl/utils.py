@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 import threading
-
+from datetime import datetime, timedelta, timezone
 from acl.models import CustomUser
 
 
@@ -54,21 +54,24 @@ def validate_user_password(password: str, user = None) -> str:
 
 
 def generate_access_token(user: CustomUser):
+    now = datetime.now(timezone.utc)
     payload = {
         'user_id': str(user.id),
         'role': user.user_type,
-        'exp': timezone.now() + timezone.timedelta(days=1),
-        'iat': timezone.now(),
+        "iat": now,                          
+        "exp": now + timedelta(hours=24),     
     }
 
     return jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
 
 def generate_refresh_token(user: CustomUser):
+    now = datetime.now(timezone.utc)
+
     payload = {
         'user_id': str(user.id),
-        'exp': timezone.now() + timezone.timedelta(days=7),
-        'iat': timezone.now(),
+        "iat": now,                          
+        "exp": now + timedelta(days=2),    
     }
 
     return jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
