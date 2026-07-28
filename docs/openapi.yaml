@@ -1526,6 +1526,11 @@ x-tagGroups:
   - hrm
   - schema
   - system
+servers:
+- url: https://kiokogit-onreander.com
+  description: Production
+- url: http://localhost:8000
+  description: Local development
 tags:
 - name: User Management
   description: |

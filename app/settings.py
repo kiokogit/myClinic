@@ -202,22 +202,16 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": README,
 
 
-    # "APPEND_COMPONENTS": {
-    #     "securitySchemes": {
-    #         "BearerAuth": {
-    #             "type": "http",
-    #             "scheme": "bearer",
-    #             "bearerFormat": "JWT",
-    #             "description": "Enter your JWT token in the format: **Bearer &lt;token&gt;**",
-    #         }
-    #     }
-    # },
-
-    # "SECURITY": [
-    #     {"BearerAuth": []},
-    # ],
-    # "SERVE_INCLUDE_SCHEMA": False,
-
+    "SERVERS": [
+        {
+            "url": "https://kiokogit-onreander.com", 
+            "description": "Production",
+        },
+        {
+            "url": "http://localhost:8000",
+            "description": "Local development",
+        },
+    ],
     "TAGS": [
         {
             "name": "User Management",
