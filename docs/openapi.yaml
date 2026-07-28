@@ -1527,7 +1527,7 @@ x-tagGroups:
   - schema
   - system
 servers:
-- url: https://kiokogit-onreander.com
+- url: https://myclinic-fpvm.onrender.com
   description: Production
 - url: http://localhost:8000
   description: Local development
