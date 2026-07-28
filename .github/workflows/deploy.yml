@@ -37,3 +37,20 @@ jobs:
       - name: Trigger Render Deploy Hook
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+  serve_docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Validate OpenAPI Document
+        run: npx @scalar/cli document validate api/openapi.json
+      - name: Log in to Registry
+        run: npx @scalar/cli auth login --token ${{ secrets.SCALAR_API_KEY }}
+      - name: Push to Registry
+        run: npx @scalar/cli registry publish --namespace default-team-vvlfo --slug myclinic-api api/openapi.json
