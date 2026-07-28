@@ -73,9 +73,7 @@ def autodiscover_exposed_apis():
                         include((app_urls, module_path), namespace=app_config.name)
                     )
                 )
-                
-                logger.error(f"Registered API for app '{app_config.name}' at {full_prefix}")
-                
+
         except ModuleNotFoundError:
             # No api.py → silently skip (normal for many apps)
             continue

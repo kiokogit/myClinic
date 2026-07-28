@@ -68,14 +68,14 @@ class UsersBaseViewSet(ModelViewSet, GenericViewSet):
         return super().create(request, *args, **kwargs)
 
     @extend_schema(
-                request={},  
-                responses={200: OpenApiResponse(
-                    description="Successful fecthing",
-                    response=UserListSerializer
-                ),},               
-                description="Get logged in user details",
-                tags=["acl"],                               
-            )
+        request={},  
+        responses={200: OpenApiResponse(
+            description="Successful fecthing",
+            response=UserListSerializer
+        ),},
+        description="Get logged in user details",
+        tags=["acl"],                               
+    )
     @action(detail=False, methods=['get'])
     def me(self, request):
         return Response(UserListSerializer(instance=self.request.user, many=False).data)

@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from utils.exceptions import UserInputValidationError
+
 
 User = get_user_model()
 
@@ -30,7 +32,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("A user with this username already exists.")
+            raise UserInputValidationError("A user with this username already exists.")
         return value
 
     def create(self, validated_data):

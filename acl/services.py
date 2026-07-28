@@ -34,12 +34,11 @@ class GeneralUserService:
 
 
     def logout(self,data):
-
-        return True
+        raise NotImplementedError()
 
     # others
     def reset_password(self):
-        ...
+        raise NotImplementedError()
 
 
 

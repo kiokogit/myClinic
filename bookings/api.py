@@ -1,11 +1,16 @@
 from django.apps import apps
-from rest_framework.viewsets import ModelViewSet
+from rest_framework import status
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.generics import ListCreateAPIView
 from drf_spectacular.utils import extend_schema
-from bookings.serializers import AppointmentCreateSerialier, AppointmentsSerializer
+from bookings.serializers import AppointmentCancellationSerializer, AppointmentCreateSerialier, AppointmentRescheduleSerializer, AppointmentsSerializer
+from bookings.services import BookingService
 from utils.permissions import PublicUserPermissionsOnly
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 
-class AppointmentsView(ModelViewSet):
+class AppointmentsView(ListCreateAPIView, GenericViewSet):
     model = apps.get_model('bookings', 'AppointmentsModel')
     serializer_class = AppointmentsSerializer
     queryset = model.objects.all()
@@ -27,7 +32,7 @@ class AppointmentsView(ModelViewSet):
         """
         Everything else uses the default (AuthenticatedUserPermission).
         """
-        if self.action in ('create',):
+        if self.action in ('create', 'cancel', ):
             return [PublicUserPermissionsOnly()]
         return super().get_permissions()
 
@@ -39,6 +44,28 @@ class AppointmentsView(ModelViewSet):
     def create(self, request, *args, **kwargs):
         self.serializer_class = AppointmentCreateSerialier
         return super().create(request, *args, **kwargs)
+
+
+    @extend_schema(
+        request=AppointmentCancellationSerializer,
+        tags=["bookings"],                               
+        )
+    @action(detail=True, methods=['patch'], url_path='cancel')
+    def cancel(self, request, pk):
+        BookingService().cancel_appointment(request, pk)
+        return Response({'detail': "Cancellation has been successful"})
+
+
+    @extend_schema(
+        request=AppointmentRescheduleSerializer,
+        tags=["bookings"],                               
+        )
+    @action(detail=True, methods=['patch'], url_path='reschedule')
+    def reschedule(self, request, pk):
+        BookingService().reschedule_appointment(request, pk)
+        return Response({'details': "Appointment has been rescheduled successful"})
+
+    
 
     
                 

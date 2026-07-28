@@ -3,7 +3,11 @@
   "scalar": "2.0.0",
   "info": {
     "title": "MyClinic API",
-    "description": "MyClinic API documentation"
+    "description": "Comprehensive API documentation for the MyClinic platform. Integrate seamlessly with our patient management and booking systems.",
+    "favicon": "https://your-domain.com/favicon.ico",
+    "metaData": {
+      "theme-color": "#6366f1"
+    }
   },
   "navigation": {
     "routes": {
@@ -11,10 +15,30 @@
         "type": "openapi",
         "title": "API Reference",
         "filepath": "docs/openapi.yaml"
+      },
+      "/github": {
+        "title": "GitHub SDKs",
+        "external": "https://github.com/myclinic"
+      },
+      "/support": {
+        "title": "Developer Support",
+        "external": "https://support.your-domain.com"
       }
     }
   },
   "siteConfig": {
-    "theme": "default"
+    "theme": "kepler",
+    "layout": "modern",
+    "darkMode": true,
+    "hideDownloadButton": false,
+    "defaultOpenFirstTag": false,
+    "hideModels": false,
+    "showSidebar": true,
+    "searchHotKey": "k",
+    "metaData": {
+      "title": "MyClinic API Documentation",
+      "description": "The official API reference for MyClinic developers."
+    },
+    "customCss": "/* Upgraded Typography */ \n :root { --scalar-font: 'Inter', system-ui, -apple-system, sans-serif; --scalar-background-1: #0f111a; }"
   }
 }
