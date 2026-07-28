@@ -6,13 +6,30 @@
 This app handles patient appointments.
 
 - For authentication see the [ACL AND USER MANAGEMENT](#tag/user-management) tag
-- To manage doctors availability see [Resource Management](#tag/resource-management)
-- Full booking flow is documented under [Appointments](#tag/appointments)
+- To manage doctors availability see [Resource Management](#tag/resource-management) tag
+- Full booking flow is documented under [Appointments](#tag/appointments) tag
+
+## Useful Links
+
+- View Backend Server Demo live on [Render Here](https://myclinic-fpvm.onrender.com)
+- PLEASE NOTE: RENDER.COM DEPLOYMENTS TAKE A WHILE ON FREE TIER SERVERS. HANG-IN-THERE. OR JUST [Buy me a droplet!](https://cloud.digitalocean.com/suspended?i=cff77e) :>)
+- View this documentation, and API Endpoints on Scalar from [this link](https://kiokogit-myclinic.apidocumentation.com/)
+
+## Getting started Locally
+
+- Clone the repository locally from [this Github Repository](https://github.com/kiokogit/myClinic.git)
+- Create a virtual environment: ```python -m venv .venv``` and activate it
+- Run ```pip install -r requirements.txt```
+- Run Migrations for your database set up ```python manage.py migrate```
+- Start server by running ```python manage.py runserver```
+- Access Dynamic Scalar documentation through ```http://localhost:8000/api/docs```
+
+- For more information access documentation [links here](https://kiokogit-myclinic.apidocumentation.com/)
 
 ## System Requirements
 
-- Small clinic with 5 doctors
-- User to book a 30min appointment slot
+- Small clinic System with 5 doctors
+- User (Patient) to book a 30min appointment slot
 - Patient be able to cancel an appointment
 - Unbooked/cancelled slots to be available for any other booking
 
@@ -20,7 +37,7 @@ This app handles patient appointments.
 
 These are the required specific functionalities derived from the basic requirements
 
-### Public Side system
+### 1. Public Side system
 
 - This is the client/patient side accessed for booking of appointments
 - Have a Registration/Login/Authentication system, for the user of type 'public' -- role based authentication
@@ -31,7 +48,7 @@ These are the required specific functionalities derived from the basic requireme
 - Be able to cancel an appointment that has not yet arrived -- cancelling resets the slot to available
 - Be able to reschedule an appointment (edit an appointment) -- to any time in the future
 
-### Actor (Doctor's) side system
+### 2. Actor (Doctor's) side system
 
 - This is the docto's side
 - Have authentication/reset system for user type 'doctor'
@@ -40,7 +57,7 @@ These are the required specific functionalities derived from the basic requireme
 - Be able to update availability in any time slot, by defining when available (besides administrative functions)
 - Also, update an appointment as fulfilled
 
-### Internal (HR/SYSTEM ADMIN) system side
+### 3. Internal (HR/SYSTEM ADMIN) system side
 
 - There's need for a systems admin or human resource side of the system
 - Have authentication/login/registration for user type 'in-charge'
@@ -65,33 +82,53 @@ These are the required specific functionalities derived from the basic requireme
 1. No overlapping appointments. No possibility of bookings at the same time by different users (Requires fast endpoints, or quick succession update of time-slots status)
 2. Public user cannot see other users' bookings. Only unavailability of the slot. Their appointments can be loaded though.
 
-## System Design Recommendations
+## System Design Recommendations (TODOs not yet Done)
 
 1. JWT Bearer tokens Authentication for session management
 2. Login/Authentication system using other providers if availble for easy user experience (like google)
 3. Aunthentication using OTP, especially for staff (doctors and admin)
-4. Rate limiting for public users - to control
+4. Rate limiting for public users - to control multiple-booking issues, etc
 5. ACID enforcement using transactions locking etc
 6. Auto-update of slots status (script? or socket?)
 7. Use PostgreSQL for db -- Well, popular, resilient, opensource, and well relational. Mysql would do similarly anyway
 8. Django REST for backend. Go is faster, but for co-routines. I actually want to avoid co-routines. And FASTAPI-- just fast. No much. Well, long setup and basic configurations will take time
 9. Status codes used will be the normal ones, nothing custom for now
 
-## Depoyments
+## System Data Modelling
+
+The data flow for the system will be as follows
+
+1. User model manages all types of user, from doctors, public and admins
+2. hrm.models keep records of working schedules per doctor, added by an admin. Unavailability slots and leaves are taken and recorded here
+3. bookings app models keep track of appointment activity for the patient and for the doctor as well
+4. system models store logs and errors captured through error handlers available
+
+## URLS
+
+- All routers are automatically discovered in the app. This will help control apps that are broken from appearing
+- Also, adding new ones do not affect the others. Clean code too
+
+## Depoyment & CI/CD
 
 - Github for respository and code management
-- Using some linode EC2 isntance Available, for testing works
-- Autodeploy using docker
+- Autodeploy on Render.com using a Deploy Hook
+- Deployment has been configured using github actions.
+- The ```main``` Branch deploys with every merge of a PR
+- The pipeline has three stages: 
+    1. a testing level that triggers tests and prevents merge of the PR before tests are successful
+    2. a main deployment stage that runs on merge of the Pull request.
+    3. and a documents deployment stage that runs to autodepoy documentations to Scalar using an API-KEY
+
+- PLEASE NOTE: RENDER.COM DEPLOYMENTS TAKE A WHILE ON FREE TIER SERVERS. HANG-IN-THERE.
 
 ## AI Reflections
 
-- Use AI for boilerplate codebase
+- Use AI for boilerplate codebase - such as base models, and utils like decode_jwt
 - Use AI for other design suggestions for data secutiry and authentications
 - Use AI for checking for code smells / vulnerabilities
-- Use AI for writing tests
+- Use AI for writing some tests
 - Use AI to suggest best code structure for scalable system design
 - Use AI for generating prpoper documentation
-
 
 ## Extra Deiverables
 

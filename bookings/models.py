@@ -13,7 +13,6 @@ class AppointmentsModel(GenericBaseModel):
     start_time = models.DateTimeField(null=False)
     # assume duration is 30mins
     duration_in_minutes = models.SmallIntegerField(default=30)
-    public_remarks = models.TextField(null=True, blank=True)
 
     # this status is for public appointment status
     status = models.CharField(max_length=100, choices=[
@@ -22,4 +21,9 @@ class AppointmentsModel(GenericBaseModel):
     # this status changes as per doctor's acceptance/in case of change of their availability
     # doctor_status = models.CharField(max_length=100, choices=[('PENDING', 'PENDING'), ('ACCEPTED', 'ACCEPTED'), ('REJECTED', 'REJECTED'), ('REQUESTED_RESCHEDULE', 'REQUESTED_RESCHEDULE')], default='PENDING')
 
+
+class AppointmentRemarksModel(GenericBaseModel):
+    appointment = models.ForeignKey(AppointmentsModel, related_name='remarks', on_delete=models.CASCADE)
+    remark = models.TextField(null=True, blank=True)
+    remark_for = models.CharField(max_length=100, null=True, blank=True)
 

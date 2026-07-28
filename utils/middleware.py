@@ -19,10 +19,6 @@ _request_local = threading.local()
 
 logger = logging.getLogger(__name__)
 
-# Global variable to cache the model once loaded
-_log_model = None
-
-
 
 class CustomExceptionMiddleware(MiddlewareMixin):
 	"""
@@ -185,7 +181,6 @@ class CustomExceptionMiddleware(MiddlewareMixin):
 		raise TimeoutError('Request timeout exceeded')
 	
 	def process_request(self, request):
-		_request_local.request = request
 		"""Process incoming request for DDoS protection and rate limiting"""
 		client_id = self.get_client_identifier(request)
 		

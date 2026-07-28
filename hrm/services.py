@@ -8,17 +8,14 @@ class AvailabilityService:
     def get_doctor_available_slots(self, doc_id, book_date):
 
         if not doc_id or not book_date:
-            print('no notihig')
             return []
 
         try:
             book_date = datetime.strptime(book_date, "%Y-%m-%d").date()
         except ValueError:
-            print('value error')
             return []
 
         if book_date < datetime.now().date():
-            print('book date is less')
             return []
 
         # Doctor away for the whole day?
@@ -28,7 +25,6 @@ class AvailabilityService:
             start_time__date__lte=book_date,
             end_time__date__gte=book_date,
         ).exists():
-            print('user not avialaibe')
             return []
 
         time_slots = set()
@@ -121,6 +117,5 @@ class AvailabilityService:
 
         return sorted(time_slots)
 
-    def create_schedule(self, doc_id):
-        ...
+
 
