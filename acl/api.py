@@ -56,10 +56,26 @@ class UsersBaseViewSet(ModelViewSet, GenericViewSet):
 
     @extend_schema(
             request=SignUpSerializer,  
-            responses={201: UserListSerializer},               
+            responses={201: OpenApiResponse(
+                description="Successful registration",
+                response=UserListSerializer
+            ),},               
             description="Create a user",
             tags=["acl"],                               
         )
     def create(self, request, *args, **kwargs):
         self.serializer_class = UserCreateSerializer
         return super().create(request, *args, **kwargs)
+
+    @extend_schema(
+                request={},  
+                responses={200: OpenApiResponse(
+                    description="Successful fecthing",
+                    response=UserListSerializer
+                ),},               
+                description="Get logged in user details",
+                tags=["acl"],                               
+            )
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        return Response(UserListSerializer(self.request.user, many=False))
