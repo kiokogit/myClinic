@@ -13,9 +13,10 @@ class AppointmentsModel(GenericBaseModel):
     start_time = models.DateTimeField(null=False)
     # assume duration is 30mins
     duration_in_minutes = models.SmallIntegerField(default=30)
+    public_remarks = models.TextField(null=True, blank=True)
 
     # this status is for public appointment status
-    public_status = models.CharField(max_length=100, choices=[
+    status = models.CharField(max_length=100, choices=[
         ('PENDING', 'PENDING'), ('ONGOING', 'ONGOING'), ('COMPLETED', 'COMPLETED'), ('CANCELLED', 'CANCELLED')
         ], default='PENDING')
     # this status changes as per doctor's acceptance/in case of change of their availability

@@ -15,7 +15,7 @@ class UserAvailabilityViewSet(ModelViewSet):
     queryset = model.objects.all()
     search_fields = ['doctor__first_name', 'doctor__last_name', 'start_date', ]
 
-    class_path = 'doctors'
+    class_path = 'doctor-schedules'
 
 
     def get_queryset(self):
@@ -25,5 +25,8 @@ class UserAvailabilityViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def availability(self, request):
-       available_slots = AvailabilityService().get_doctor_available_slots(request)
+       available_slots = AvailabilityService().get_doctor_available_slots(
+           doc_id=self.request.query_params.get('d_id', None),  # type: ignore
+           book_date=self.request.query_params.get('date') # type: ignore
+       )
        return Response({"available_slots": available_slots})

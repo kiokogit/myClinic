@@ -32,6 +32,9 @@ jobs:
       - name: Validate OpenAPI Document
         run: npx @scalar/cli document validate docs/openapi.yaml
 
+      - name: Log in to Registry
+        run: npx @scalar/cli auth login --token ${{ secrets.SCALAR_TOKEN }}
+
       - name: Push to Registry
         run: |
           npx @scalar/cli registry publish \

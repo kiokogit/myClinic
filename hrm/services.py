@@ -5,19 +5,20 @@ from hrm.models import DoctorsWorkScheduleModel, UserUnavailabilityModel
 # Create your views here.
 class AvailabilityService:
 
-    def get_doctor_available_slots(self, request):
-        doc_id = request.query_params.get("d_id")
-        book_date = request.query_params.get("date")
+    def get_doctor_available_slots(self, doc_id, book_date):
 
         if not doc_id or not book_date:
+            print('no notihig')
             return []
 
         try:
             book_date = datetime.strptime(book_date, "%Y-%m-%d").date()
         except ValueError:
+            print('value error')
             return []
 
         if book_date < datetime.now().date():
+            print('book date is less')
             return []
 
         # Doctor away for the whole day?
@@ -27,6 +28,7 @@ class AvailabilityService:
             start_time__date__lte=book_date,
             end_time__date__gte=book_date,
         ).exists():
+            print('user not avialaibe')
             return []
 
         time_slots = set()
@@ -103,11 +105,12 @@ class AvailabilityService:
         # Remove slots already booked by patients
         booked_slots = set(
             AppointmentsModel.objects.filter(
-                target_user_id=doc_id,
-                public_status__in=["PENDING", "ONGOING"],
+                doctor__id=doc_id,
+                status__in=["PENDING", "ONGOING"],
                 start_time__date=book_date,
             ).values_list("start_time", flat=True)
         )
+        
 
         booked_slots = {
             dt.strftime("%H:%M")
@@ -117,4 +120,7 @@ class AvailabilityService:
         time_slots -= booked_slots
 
         return sorted(time_slots)
+
+    def create_schedule(self, doc_id):
+        ...
 

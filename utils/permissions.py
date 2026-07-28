@@ -2,15 +2,23 @@ from rest_framework import permissions
 
 
 class AuthenticatedUserPermission(permissions.BasePermission):
-    message = 'Unauthorised User Not Allowed.'
+    message = 'You do not have permission to perform this action'
 
     def has_permission(self, request, view):
-        if 'Authorization' not in request.headers.keys():
-            return False
-        headers = {
-            'Authorization': request.headers.get('Authorization')
-        }
-
-        # check roles
-        
         return super().has_permission(request, view)
+
+class PublicUserPermissionsOnly(AuthenticatedUserPermission):
+
+    def has_permission(self, request, view):
+        if request.user.user_type != 'public':
+            return False
+        return super().has_permission(request, view)
+
+class DoctorPermissionOnly(AuthenticatedUserPermission):
+
+    def has_permission(self, request, view):
+            if request.user.user_type != 'doctor':
+                return False
+            return super().has_permission(request, view)
+    
+
