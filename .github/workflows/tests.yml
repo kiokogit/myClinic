@@ -3,7 +3,7 @@ name: RunTests CI
 on:
   push:
     branches:
-      - main
+      - dev_main
 
 jobs:
   tests:
