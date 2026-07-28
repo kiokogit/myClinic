@@ -7,26 +7,6 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # build:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v2
-
-  #     - name: Log in to Docker Hub
-  #       uses: docker/login-action@v2
-  #       with:
-  #         username: ${{ secrets.DOCKER_USERNAME }}
-  #         password: ${{ secrets.DOCKER_PASSWORD }}
-
-  #     - name: Build and push Docker image
-  #       run: |
-  #         docker build -t kiokogit12/savannah_tests:main .
-  #         docker push kiokogit12/savannah_tests:main
-
   deploy:
     runs-on: ubuntu-latest
     # needs: build
@@ -48,9 +28,18 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
+
+      - name: Generate OpenAPI
+        run: |
+          python manage.py spectacular \
+            --file docs/openapi.yaml \
+            --validate
       - name: Validate OpenAPI Document
-        run: npx @scalar/cli document validate api/openapi.json
-      - name: Log in to Registry
-        run: npx @scalar/cli auth login --token ${{ secrets.SCALAR_API_KEY }}
+        run: npx @scalar/cli document validate docs/openapi.yaml
+
       - name: Push to Registry
-        run: npx @scalar/cli registry publish --namespace default-team-vvlfo --slug myclinic-api api/openapi.json
+        run: |
+          npx @scalar/cli registry publish \
+            --namespace default-team-vvlfo \
+            --slug myclinic-api \
+            docs/openapi.yaml
