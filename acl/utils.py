@@ -13,6 +13,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 import threading
 
+from acl.models import CustomUser
+
 
 User = get_user_model()
 
@@ -51,7 +53,7 @@ def validate_user_password(password: str, user = None) -> str:
     return password
 
 
-def generate_access_token(user: AbstractUser):
+def generate_access_token(user: CustomUser):
     payload = {
         'user_id': str(user.id),
         'role': user.user_type,
@@ -62,7 +64,7 @@ def generate_access_token(user: AbstractUser):
     return jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
 
-def generate_refresh_token(user: AbstractUser):
+def generate_refresh_token(user: CustomUser):
     payload = {
         'user_id': str(user.id),
         'exp': timezone.now() + timezone.timedelta(days=7),
@@ -81,7 +83,7 @@ def refresh_access_token(refresh_token):
         if not user_id:
             raise AuthenticationFailed('Invalid refresh token.')
 
-        user = User.objects.get(id=user_id)
+        user: CustomUser = User.objects.get(id=user_id) # type: ignore
         if not user.is_active:
             raise AuthenticationFailed('User is inactive.')
     except Exception as e:

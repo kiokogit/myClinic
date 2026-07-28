@@ -44,6 +44,8 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'django_filters',
     'corsheaders',
+    "drf_spectacular",
+    "markdown",
 ]
 
 LOCAL_APPS = []
@@ -101,7 +103,9 @@ ROOT_URLCONF = 'app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+         "DIRS": [
+            BASE_DIR / "templates",
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -113,6 +117,8 @@ TEMPLATES = [
         },
     },
 ]
+
+README = (BASE_DIR / "README.md").read_text(encoding="utf-8")
 
 WSGI_APPLICATION = 'app.wsgi.application'
 
@@ -179,12 +185,40 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'utils.permissions.AuthenticatedUserPermission',
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     'DEFAULT_PAGINATION_CLASS': 'utils.pagination.StandardResultsSetPagination',
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter'
     ]
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "MyClinic API",
+    "DESCRIPTION": "this is a ",
+    "VERSION": "1.0.0",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "MyClinic API",
+    "VERSION": "1.0.0",
+
+    "SECURITY": [
+        {
+            "BearerAuth": []
+        }
+    ],
+
+    "COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    }
 }
 
 APPEND_SLASH = False

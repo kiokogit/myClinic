@@ -15,7 +15,7 @@ class GeneralUserService:
         try:
             user = User.objects.get(username__iexact=data.get('username'))
         except User.DoesNotExist:
-            raise AuthenticationFailed("Invalid user credentials. Please try again.")
+            raise AuthenticationFailed("Invalid email/password.")
         except User.MultipleObjectsReturned:
             raise AuthenticationFailed("Your account could not be verified. Please contact support.")
 
@@ -28,8 +28,8 @@ class GeneralUserService:
         # generate tokens
 
         return {
-            'access': generate_access_token(user),
-            'refresh': generate_refresh_token(user)
+            'access': generate_access_token(user), # type:ignore
+            'refresh': generate_refresh_token(user) # type:ignore
         }
 
 

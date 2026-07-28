@@ -1,7 +1,6 @@
 import inspect
 import logging
 import importlib
-from django.contrib import admin
 from django.urls import path, include
 from django.apps import apps
 from rest_framework import routers, viewsets, views
