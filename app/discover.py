@@ -49,7 +49,6 @@ def autodiscover_exposed_apis():
     all_patterns = []
 
     local_apps = [app for app in apps.get_app_configs() if app.name in LOCAL_APPS]
-    logging.error(local_apps)
     for app_config in local_apps:
         # Only process our local apps
         
@@ -81,7 +80,7 @@ def autodiscover_exposed_apis():
             # No api.py → silently skip (normal for many apps)
             continue
         except Exception as e:
-            logger.error(f"Failed to auto-discover APIs for app '{app_config.name}': {e}")
+            # logger.error(f"Failed to auto-discover APIs for app '{app_config.name}': {e}")
             continue
             
     return all_patterns

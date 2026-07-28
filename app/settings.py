@@ -204,7 +204,7 @@ SPECTACULAR_SETTINGS = {
 
     "SERVERS": [
         {
-            "url": "https://kiokogit-onreander.com", 
+            "url": "https://myclinic-fpvm.onrender.com", 
             "description": "Production",
         },
         {
