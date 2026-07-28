@@ -40,4 +40,5 @@ jobs:
           npx @scalar/cli registry publish \
             --namespace default-team-vvlfo \
             --slug myclinic-api \
+            --force \
             docs/openapi.yaml
