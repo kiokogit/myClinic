@@ -63,8 +63,8 @@ for item in BASE_DIR.iterdir():
 
     try:
         spec = importlib.util.spec_from_file_location(f"{item.name}.apps", apps_py)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        module = importlib.util.module_from_spec(spec) # type: ignore
+        spec.loader.exec_module(module) # type: ignore
 
         # Find the AppConfig class
         app_config = None
