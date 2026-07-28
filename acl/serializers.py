@@ -5,6 +5,21 @@ from rest_framework import serializers
 User = get_user_model()
 
 class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+            model = User
+            fields = [
+                "first_name",
+                "last_name",
+                "other_names",
+                "user_type",
+                "username",
+                "gender"
+            ]
+    
+    
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:

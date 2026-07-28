@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse
-from acl.serializers import LoginResponseSerializer, LoginSerializer, SignUpSerializer, UserListSerializer
+from acl.serializers import LoginResponseSerializer, LoginSerializer, SignUpSerializer, UserCreateSerializer, UserListSerializer
 from acl.services import GeneralUserService
 
 
@@ -31,8 +31,8 @@ class UsersBaseViewSet(ModelViewSet, GenericViewSet):
 
 
     def get_queryset(self):
-        if str(self.request.query_params.get('include_deleted', 0)) ==str(1):
-            return self.model.objects_all.all()
+        if str(self.request.query_params.get('include_deleted', 0)) ==str(1): # type:ignore
+            return self.model.objects_all.all() # type:ignore
         return self.model.objects.all().distinct()
 
 
@@ -61,4 +61,5 @@ class UsersBaseViewSet(ModelViewSet, GenericViewSet):
             tags=["acl"],                               
         )
     def create(self, request, *args, **kwargs):
+        self.serializer_class = UserCreateSerializer
         return super().create(request, *args, **kwargs)

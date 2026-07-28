@@ -1,0 +1,1580 @@
+openapi: 3.0.3
+info:
+  title: MyClinic API
+  version: 1.0.0
+  description: |2
+
+    # INTRODUCTION
+
+    ## Overview
+
+    This app handles patient appointments.
+
+    - For authentication see the [ACL AND USER MANAGEMENT](#tag/user-management) tag
+    - To manage doctors availability see [Resource Management](#tag/resource-management)
+    - Full booking flow is documented under [Appointments](#tag/appointments)
+
+    ## System Requirements
+
+    - Small clinic with 5 doctors
+    - User to book a 30min appointment slot
+    - Patient be able to cancel an appointment
+    - Unbooked/cancelled slots to be available for any other booking
+
+    ## Design Specifications
+
+    These are the required specific functionalities derived from the basic requirements
+
+    ### Public Side system
+
+    - This is the client/patient side accessed for booking of appointments
+    - Have a Registration/Login/Authentication system, for the user of type 'public' -- role based authentication
+    - Be able to view all upcoming (self) appointments or bookings -- based on the logged in user
+    - Can view all available time slots for a specific doctor in a given date -- so all slots sohuld be by date, and by doctor; or by doctor then by date
+    - Can view and search for a doctor, then see their available slots for booking
+    - Be able to book appointments (at least 30 mins after now)
+    - Be able to cancel an appointment that has not yet arrived -- cancelling resets the slot to available
+    - Be able to reschedule an appointment (edit an appointment) -- to any time in the future
+
+    ### Actor (Doctor's) side system
+
+    - This is the docto's side
+    - Have authentication/reset system for user type 'doctor'
+    - View all current/future appointments -- filters be by date, or week or month or all
+    - View list of available days/slots for scheduling
+    - Be able to update availability in any time slot, by defining when available (besides administrative functions)
+    - Also, update an appointment as fulfilled
+
+    ### Internal (HR/SYSTEM ADMIN) system side
+
+    - There's need for a systems admin or human resource side of the system
+    - Have authentication/login/registration for user type 'in-charge'
+    - View all appointments by date/time
+    - View all doctors
+    - View all registered users by category
+    - View all doctors details - including subinformation on appoimtnents, cancellations, availability
+    - Upload doctors' schedule: availability, shifts (day/night), leave days, assigned-other-duties days and other working schedules like lunch hours etc
+    - revoke doctor's credentials once not in the hospital
+    - Power to revoke/suspend user if in misuse of the sytem (like a cyber attack, or too many bookings wih no show up)
+    - Ask user to reschedule (incase there is a problem with the chosen slot - eg overlooked leave day for a doctor)
+
+    ## Design Assumptions
+
+    1. No repeating bookings - That is, no control of user booking same doctor two consecutiec slots
+    2. Each appointment is only for 30mins slot, not more, not less
+    3. Patient can book any number of slots, including subsequent slots, with any doctor, same or different
+    4. No leave can be made on a booked time slot, to cancel the appointment.
+
+    ## System design considerations
+
+    1. No overlapping appointments. No possibility of bookings at the same time by different users (Requires fast endpoints, or quick succession update of time-slots status)
+    2. Public user cannot see other users' bookings. Only unavailability of the slot. Their appointments can be loaded though.
+
+    ## System Design Recommendations
+
+    1. JWT Bearer tokens Authentication for session management
+    2. Login/Authentication system using other providers if availble for easy user experience (like google)
+    3. Aunthentication using OTP, especially for staff (doctors and admin)
+    4. Rate limiting for public users - to control
+    5. ACID enforcement using transactions locking etc
+    6. Auto-update of slots status (script? or socket?)
+    7. Use PostgreSQL for db -- Well, popular, resilient, opensource, and well relational. Mysql would do similarly anyway
+    8. Django REST for backend. Go is faster, but for co-routines. I actually want to avoid co-routines. And FASTAPI-- just fast. No much. Well, long setup and basic configurations will take time
+    9. Status codes used will be the normal ones, nothing custom for now
+
+    ## Depoyments
+
+    - Github for respository and code management
+    - Using some linode EC2 isntance Available, for testing works
+    - Autodeploy using docker
+
+    ## AI Reflections
+
+    - Use AI for boilerplate codebase
+    - Use AI for other design suggestions for data secutiry and authentications
+    - Use AI for checking for code smells / vulnerabilities
+    - Use AI for writing tests
+    - Use AI to suggest best code structure for scalable system design
+    - Use AI for generating prpoper documentation
+
+
+    ## Extra Deiverables
+
+    1. A DOCUMENTATION TESTABLE
+    2. ENDPOINTS EXPORTABLE COLLECTION
+    3. A small UI?? if available time
+paths:
+  /api/acl/users:
+    get:
+      operationId: acl_users_list
+      description: Base class view for user managemet
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - acl
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserListList'
+          description: ''
+    post:
+      operationId: acl_users_create
+      description: Create a user
+      tags:
+      - acl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUp'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SignUp'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignUp'
+        required: true
+      security:
+      - BearerAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+          description: ''
+  /api/acl/users/{id}:
+    get:
+      operationId: acl_users_retrieve
+      description: Base class view for user managemet
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - acl
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+          description: ''
+    put:
+      operationId: acl_users_update
+      description: Base class view for user managemet
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - acl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserList'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserList'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserList'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+          description: ''
+    patch:
+      operationId: acl_users_partial_update
+      description: Base class view for user managemet
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - acl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserList'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserList'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserList'
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+          description: ''
+    delete:
+      operationId: acl_users_destroy
+      description: Base class view for user managemet
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - acl
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/acl/users/login:
+    post:
+      operationId: acl_users_login_create
+      description: Authenticate a user and return tokens / user data.
+      tags:
+      - acl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          description: Successful login
+        '400':
+          description: Invalid credentials
+        '401':
+          description: Unauthorized
+  /api/bookings/appointments:
+    get:
+      operationId: bookings_appointments_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - bookings
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAppointmentsList'
+          description: ''
+    post:
+      operationId: bookings_appointments_create
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Appointments'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Appointments'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Appointments'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointments'
+          description: ''
+  /api/bookings/appointments/{id}:
+    get:
+      operationId: bookings_appointments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this appointments model.
+        required: true
+      tags:
+      - bookings
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointments'
+          description: ''
+    put:
+      operationId: bookings_appointments_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this appointments model.
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Appointments'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Appointments'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Appointments'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointments'
+          description: ''
+    patch:
+      operationId: bookings_appointments_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this appointments model.
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointments'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointments'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointments'
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointments'
+          description: ''
+    delete:
+      operationId: bookings_appointments_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this appointments model.
+        required: true
+      tags:
+      - bookings
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hrm/doctors:
+    get:
+      operationId: hrm_doctors_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - hrm
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWorkScheduleList'
+          description: ''
+    post:
+      operationId: hrm_doctors_create
+      tags:
+      - hrm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkSchedule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkSchedule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkSchedule'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkSchedule'
+          description: ''
+  /api/hrm/doctors/{id}:
+    get:
+      operationId: hrm_doctors_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this doctors work schedule model.
+        required: true
+      tags:
+      - hrm
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkSchedule'
+          description: ''
+    put:
+      operationId: hrm_doctors_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this doctors work schedule model.
+        required: true
+      tags:
+      - hrm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkSchedule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkSchedule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkSchedule'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkSchedule'
+          description: ''
+    patch:
+      operationId: hrm_doctors_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this doctors work schedule model.
+        required: true
+      tags:
+      - hrm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkSchedule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkSchedule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkSchedule'
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkSchedule'
+          description: ''
+    delete:
+      operationId: hrm_doctors_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this doctors work schedule model.
+        required: true
+      tags:
+      - hrm
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hrm/doctors/availability:
+    get:
+      operationId: hrm_doctors_availability_retrieve
+      tags:
+      - hrm
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkSchedule'
+          description: ''
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/system/logs:
+    get:
+      operationId: system_logs_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - system
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSystemErrorsLogsList'
+          description: ''
+    post:
+      operationId: system_logs_create
+      tags:
+      - system
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemErrorsLogs'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SystemErrorsLogs'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SystemErrorsLogs'
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemErrorsLogs'
+          description: ''
+  /api/system/logs/{id}:
+    get:
+      operationId: system_logs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this data changes and suspected activity.
+        required: true
+      tags:
+      - system
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemErrorsLogs'
+          description: ''
+    put:
+      operationId: system_logs_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this data changes and suspected activity.
+        required: true
+      tags:
+      - system
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemErrorsLogs'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SystemErrorsLogs'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SystemErrorsLogs'
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemErrorsLogs'
+          description: ''
+    patch:
+      operationId: system_logs_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this data changes and suspected activity.
+        required: true
+      tags:
+      - system
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSystemErrorsLogs'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSystemErrorsLogs'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSystemErrorsLogs'
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemErrorsLogs'
+          description: ''
+    delete:
+      operationId: system_logs_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this data changes and suspected activity.
+        required: true
+      tags:
+      - system
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    Appointments:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        last_modified:
+          type: string
+          format: date-time
+          readOnly: true
+        is_deleted:
+          type: boolean
+        date_deleted:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        start_time:
+          type: string
+          format: date-time
+        duration_in_minutes:
+          type: integer
+        public_status:
+          $ref: '#/components/schemas/PublicStatusEnum'
+        patient:
+          type: string
+          format: uuid
+        doctor:
+          type: string
+          format: uuid
+      required:
+      - date_created
+      - doctor
+      - id
+      - last_modified
+      - patient
+      - start_time
+    BlankEnum:
+      enum:
+      - ''
+    GenderEnum:
+      enum:
+      - male
+      - female
+      - other
+      type: string
+      description: |-
+        * `male` - Male
+        * `female` - Female
+        * `other` - Rather Not say
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username or email
+        password:
+          type: string
+          writeOnly: true
+          description: User password
+      required:
+      - password
+      - username
+    LoginResponse:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    NullEnum:
+      enum:
+      - null
+    PaginatedAppointmentsList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Appointments'
+    PaginatedSystemErrorsLogsList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemErrorsLogs'
+    PaginatedUserListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserList'
+    PaginatedWorkScheduleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkSchedule'
+    PatchedAppointments:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        last_modified:
+          type: string
+          format: date-time
+          readOnly: true
+        is_deleted:
+          type: boolean
+        date_deleted:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        start_time:
+          type: string
+          format: date-time
+        duration_in_minutes:
+          type: integer
+        public_status:
+          $ref: '#/components/schemas/PublicStatusEnum'
+        patient:
+          type: string
+          format: uuid
+        doctor:
+          type: string
+          format: uuid
+    PatchedSystemErrorsLogs:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        last_modified:
+          type: string
+          format: date-time
+          readOnly: true
+        is_deleted:
+          type: boolean
+        date_deleted:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        data: {}
+        description:
+          type: string
+          nullable: true
+        activity_type:
+          type: string
+          nullable: true
+          maxLength: 1000
+        source:
+          type: string
+          nullable: true
+          description: System or user
+          maxLength: 1000
+        traceback:
+          type: string
+          nullable: true
+    PatchedUserList:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        other_names:
+          type: string
+          nullable: true
+          maxLength: 255
+        user_type:
+          $ref: '#/components/schemas/UserTypeEnum'
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        gender:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+    PatchedWorkSchedule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        last_modified:
+          type: string
+          format: date-time
+          readOnly: true
+        is_deleted:
+          type: boolean
+        date_deleted:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        day_start_time:
+          type: string
+          format: time
+        day_end_time:
+          type: string
+          format: time
+        remarks:
+          type: string
+          nullable: true
+        doctor:
+          type: string
+          format: uuid
+    PublicStatusEnum:
+      enum:
+      - PENDING
+      - ONGOING
+      - COMPLETED
+      - CANCELLED
+      type: string
+      description: |-
+        * `PENDING` - PENDING
+        * `ONGOING` - ONGOING
+        * `COMPLETED` - COMPLETED
+        * `CANCELLED` - CANCELLED
+    SignUp:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        password:
+          type: string
+        username:
+          type: string
+          format: email
+        other_names:
+          type: string
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        residence:
+          type: string
+          nullable: true
+        user_type:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - first_name
+      - last_name
+      - password
+      - user_type
+      - username
+    SystemErrorsLogs:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        last_modified:
+          type: string
+          format: date-time
+          readOnly: true
+        is_deleted:
+          type: boolean
+        date_deleted:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        data: {}
+        description:
+          type: string
+          nullable: true
+        activity_type:
+          type: string
+          nullable: true
+          maxLength: 1000
+        source:
+          type: string
+          nullable: true
+          description: System or user
+          maxLength: 1000
+        traceback:
+          type: string
+          nullable: true
+      required:
+      - date_created
+      - id
+      - last_modified
+    UserList:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        other_names:
+          type: string
+          nullable: true
+          maxLength: 255
+        user_type:
+          $ref: '#/components/schemas/UserTypeEnum'
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        gender:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - first_name
+      - last_name
+      - username
+    UserTypeEnum:
+      enum:
+      - admin
+      - doctor
+      - public
+      type: string
+      description: |-
+        * `admin` - Admin
+        * `doctor` - Doctor
+        * `public` - public
+    WorkSchedule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        last_modified:
+          type: string
+          format: date-time
+          readOnly: true
+        is_deleted:
+          type: boolean
+        date_deleted:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_by:
+          type: string
+          nullable: true
+          maxLength: 255
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        day_start_time:
+          type: string
+          format: time
+        day_end_time:
+          type: string
+          format: time
+        remarks:
+          type: string
+          nullable: true
+        doctor:
+          type: string
+          format: uuid
+      required:
+      - date_created
+      - day_end_time
+      - day_start_time
+      - doctor
+      - end_date
+      - id
+      - last_modified
+      - start_date
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Enter JWT token as: Bearer <token>'
+x-tagGroups:
+- name: DOCUMENTATION
+  tags:
+  - User Management
+  - Appointments
+  - Resource Management
+- name: API ENDPOINTS
+  tags:
+  - acl
+  - bookings
+  - hrm
+  - schema
+  - system
+tags:
+- name: User Management
+  description: |
+    # ACL AND USER MANAGEMENT
+
+    This now works as a charm.
+    Manages all users and access control - roles, and groups if available
+
+    ## Functionalities
+
+    ### User Authentication
+
+    - This includes
+
+    1. User Registration
+    2. User login/Logout
+    3. User authentication management
+    4. Role based management
+
+    ## Registration
+
+    - Every user is considered a custom user, with difference in ```user_type``` as either ```Doctor```, ```public``` or ```admin```
+    - Registration includes sign up using ```password``` and ```email``` as the username
+    - ```Admin``` and ```Doctor``` users can require OTP if approved
+
+    ## Login and Authenticaiton management
+
+    - User logs in using basic credentials
+    - Client receives authentication headers/credentials to share with server for athorization
+    - Otherwise, returns 401 for invalid credentials
+    - Logout is managed from backend as well, by invalidating login tokens (#TODO)
+
+    ## Role Based Access Control
+
+    - Users are divided by role/ ```user_type``` at the very least.
+    - Resource access is also managed by user type, with admin having all-area access
+- name: Appointments
+  description: |+
+    # Appointments and booking
+
+    This is the main app for the system
+    Provides User ability to book an appointment, and keep a list of the bookings
+
+- name: Resource Management
+  description: |+
+    # Human Resource Management
+
+    - This manages the human resource: doctors and other workers
+    - Adds leave days, and availability as per user
+
+
+...

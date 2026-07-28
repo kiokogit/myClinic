@@ -30,9 +30,7 @@ class JWTAuthentication(authentication.BaseAuthentication):
 
         parts = auth_header.split()
         if len(parts) != 2 or parts[0] != self.keyword:
-            raise exceptions.AuthenticationFailed(
-                "Invalid Authorization header. Expected: Bearer <token>"
-            )
+            raise exceptions.NotAuthenticated()
 
         return self.authenticate_credentials(parts[1])
 
@@ -44,23 +42,23 @@ class JWTAuthentication(authentication.BaseAuthentication):
                 algorithms=["HS256"],
             )
         except jwt.ExpiredSignatureError:
-            raise exceptions.AuthenticationFailed("Token has expired")
+            raise exceptions.NotAuthenticated()
         except jwt.InvalidTokenError as e:
             print(e)
-            raise exceptions.AuthenticationFailed("Invalid token")
+            raise exceptions.NotAuthenticated()
 
         user_id = payload.get("user_id") or payload.get("id")
         if not user_id:
-            raise exceptions.AuthenticationFailed("Invalid payload")
+            raise exceptions.NotAuthenticated()
 
-        User = get_user_model()          # ← call it here, not at module level
+        User = get_user_model()       
 
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            raise exceptions.AuthenticationFailed("User not found")
+            raise exceptions.NotAuthenticated()
 
         if not user.is_active:
-            raise exceptions.AuthenticationFailed("User is disabled")
+            raise exceptions.NotAuthenticated()
 
         return (user, token)

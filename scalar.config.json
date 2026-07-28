@@ -1,0 +1,20 @@
+{
+  "$schema": "https://registry.scalar.com/@scalar/schemas/config",
+  "scalar": "2.0.0",
+  "info": {
+    "title": "MyClinic API",
+    "description": "MyClinic API documentation"
+  },
+  "navigation": {
+    "routes": {
+      "/": {
+        "type": "openapi",
+        "title": "API Reference",
+        "filepath": "docs/openapi.yaml"
+      }
+    }
+  },
+  "siteConfig": {
+    "theme": "default"
+  }
+}
