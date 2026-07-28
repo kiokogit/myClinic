@@ -29,11 +29,6 @@ jobs:
         with:
           node-version: 24
 
-      - name: Generate OpenAPI
-        run: |
-          python manage.py spectacular \
-            --file docs/openapi.yaml \
-            --validate
       - name: Validate OpenAPI Document
         run: npx @scalar/cli document validate docs/openapi.yaml
 
