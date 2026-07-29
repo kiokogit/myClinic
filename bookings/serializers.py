@@ -1,6 +1,6 @@
 
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.utils import timezone
 from rest_framework import serializers, exceptions
@@ -23,6 +23,7 @@ class RemarksSerializer(serializers.ModelSerializer):
 
 class AppointmentsSerializer(serializers.ModelSerializer):
     remarks = RemarksSerializer(many=True)
+    status = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = AppointmentsModel
@@ -36,6 +37,11 @@ class AppointmentsSerializer(serializers.ModelSerializer):
             "duration_in_minutes",
             "remarks"
         ]
+
+    def get_status(self, obj):
+        if obj.status == 'PENDING' and obj.start_time < datetime.now():
+            return 'EXPIRED'
+        return obj.status
 
 
 class AppointmentCreateSerialier(serializers.Serializer):

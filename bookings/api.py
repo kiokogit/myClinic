@@ -8,6 +8,8 @@ from bookings.services import BookingService
 from utils.permissions import PublicUserPermissionsOnly
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Case, When, Value, IntegerField, Q
+from django.utils import timezone
 
 
 class AppointmentsView(ListCreateAPIView, GenericViewSet):
@@ -20,7 +22,19 @@ class AppointmentsView(ListCreateAPIView, GenericViewSet):
 
 
     def get_queryset(self):
-        qs = self.queryset
+        now = timezone.now()
+        qs = self.queryset.annotate(
+                sort_priority=Case(
+                    When(
+                        Q(start_time__gte=now) &
+                        Q(status__in=["PENDING", "ONGOING"]),
+                        then=Value(0),
+                    ),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            ).order_by("sort_priority", "start_time")
+        
         # all if admin
         if self.request.user.user_type == 'public': # type: ignore
             qs = qs.filter(patient=self.request.user)

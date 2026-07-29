@@ -108,6 +108,37 @@ The data flow for the system will be as follows
 - All routers are automatically discovered in the app. This will help control apps that are broken from appearing
 - Also, adding new ones do not affect the others. Clean code too
 
+## How It Works
+
+This application works in the following flow:
+
+Authentication:
+
+- Public user (patient or client) registers and logs in through the provided authentication mechanism
+- Authentication is performed using JWT tokens signed and using a secret signature and H256 algorithm
+- A system user (or admin or HR staff) has an account created by the superuser account for management of the system activity
+- The Admin creates an account for the Doctors (no direct registration for doctors) and they proceed with their own account management
+
+Schedule management:
+
+- The Admin also adds the specific doctor's schedules - availability (day or night shifts), and unavailability (such as leave days) per day.
+- The schedules are described per day and per time_in and time_out durations. This defines a doctor's availability
+- There may be unavailability in case a doctor is scheduled, but calls in sick. This is set by the admin as well, and the admin fills in with a 'replacement_doctor' to fill in the schedule
+- The admin can see the full schedule (in a calendar format) for each user.
+
+Booking and appointments:
+
+- Each schedule submitted is assummed to contain 30min time slots, beginning at the top of or half past the hour of the defined schedule (To make it simple)
+- The public user sees the availability in form of 30min slots;
+- The patient who wants to book an appointment searches a doctor, and checks his/her availability of the specific date;
+- The patient books a slot with optional remarks (if available). There is further validation of the availability of the slot during booking just incase there is concurrent requests.
+- Upon confirmation, the patient can view their make bookings, with date, time and doctor;
+- A patient can cancel, or reschedule the appointment (at least 1 hour to the appointment) if they want to, with reasons.
+
+Other Functionalities:
+
+- No appointments can be made to a doctor if not declared as available / on shift that day
+
 ## Depoyment & CI/CD
 
 - Github for respository and code management
@@ -123,12 +154,12 @@ The data flow for the system will be as follows
 
 ## AI Reflections
 
-- Use AI for boilerplate codebase - such as base models, and utils like decode_jwt
-- Use AI for other design suggestions for data secutiry and authentications
-- Use AI for checking for code smells / vulnerabilities
-- Use AI for writing some tests
-- Use AI to suggest best code structure for scalable system design
-- Use AI for generating prpoper documentation
+- Used AI for boilerplate codebase - such as base models, and utils like decode_jwt
+- Used AI for other design suggestions for data secutiry and authentications
+- Used AI for checking for code smells / vulnerabilities
+- Used AI for writing some tests
+- Used AI to suggest best code structure for scalable system design
+- Used AI for generating proper documentation
 
 ## Extra Deiverables
 
