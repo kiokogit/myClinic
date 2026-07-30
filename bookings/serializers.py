@@ -6,6 +6,7 @@ from django.utils import timezone
 from rest_framework import serializers, exceptions
 
 from acl.models import CustomUser
+from acl.serializers import UserListSerializer
 from bookings.models import AppointmentRemarksModel, AppointmentsModel
 from bookings.services import BookingService
 from utils.exceptions import UserInputValidationError
@@ -24,6 +25,8 @@ class RemarksSerializer(serializers.ModelSerializer):
 class AppointmentsSerializer(serializers.ModelSerializer):
     remarks = RemarksSerializer(many=True)
     status = serializers.SerializerMethodField(read_only=True)
+    patient = UserListSerializer()
+    doctor = UserListSerializer()
 
     class Meta:
         model = AppointmentsModel

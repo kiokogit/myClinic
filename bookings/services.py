@@ -55,7 +55,7 @@ class BookingService:
         if request.data.get('remarks', None) in ['', None]:
             raise UserInputValidationError("Rescheduling reasons or remarks are required")
 
-        booking_date = datetime.strptime(request.data.get('start_time'), "%Y-%m-%d %H:%M:%S")
+        booking_date = datetime.strptime(request.data.get('start_time'), "%Y-%m-%d %H:%M")
 
         if booking_date < timezone.now() + timedelta(minutes=60):
             raise UserInputValidationError("Appointment booking time must be at least 1 hour from now")
