@@ -40,7 +40,7 @@ class CustomExceptionMiddleware(MiddlewareMixin):
 		self.rate_limit_window = getattr(settings, 'RATE_LIMIT_WINDOW_SECONDS', 60)
 		self.consecutive_limit = getattr(settings, 'CONSECUTIVE_IDENTICAL_QUERIES_LIMIT', 5)
 		self.consecutive_window = getattr(settings, 'CONSECUTIVE_QUERIES_WINDOW_SECONDS', 60)
-		self.ddos_block_duration = getattr(settings, 'DDOS_BLOCK_DURATION_SECONDS', 300)  # 5 minutes
+		self.ddos_block_duration = getattr(settings, 'DDOS_BLOCK_DURATION_SECONDS', 1000)  # 5 minutes
 		
 		# In-memory storage for request tracking
 		self.request_counts = defaultdict(deque)

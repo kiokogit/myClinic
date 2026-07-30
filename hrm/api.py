@@ -43,4 +43,16 @@ class UserAvailabilityViewSet(ModelViewSet):
        )
        return Response({"available_slots": available_slots})
 
+
+class LeaveDaysManagementViewSet(ModelViewSet):
+    model = apps.get_model('hrm', 'UserUnavailabilityModel')
+    serializer_class = WorkScheduleSerializer
+    queryset = model.objects.all()
+    search_fields = ['doctor__first_name', 'doctor__last_name', 'start_time', ]
+
+    class_path = 'doctor-off-duty'
+
+
+    def get_queryset(self):
+        return self.queryset
     
